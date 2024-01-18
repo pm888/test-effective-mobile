@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	pgGoodMsg = "postgres ...  starts"
+	pgGoodMsg = "postgres  ...  starts"
 	pgBadMsg  = "error connect BD"
 )
 
@@ -33,4 +33,12 @@ func ConnectPostgresql(c config.Config) (*sql.DB, error) {
 	}
 	log.Println(pgGoodMsg)
 	return db, nil
+}
+func DeletePersonByID(id int, s *sql.DB) error {
+	_, err := s.Exec("DELETE FROM persons WHERE id = $1", id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
