@@ -33,7 +33,7 @@ func Run() error {
 	a := api.New(db)
 	router := api.SetupRoutes(a)
 	port := ":8080"
-	log.Printf("Server    ... running on http://localhost%s", port)
+	log.Printf("Server ... running on http://localhost%s", port)
 	log.Fatal(http.ListenAndServe(port, router))
 	return nil
 }

@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"test_effective_mobile/test-effective-mobile/internal/config"
+	"test_effective_mobile/test-effective-mobile/internal/models"
 
 	_ "github.com/lib/pq"
 	"github.com/pkg/errors"
@@ -40,5 +41,48 @@ func DeletePersonByID(id int, s *sql.DB) error {
 		return err
 	}
 
+	return nil
+}
+func AddPerson(person *models.Person, s *sql.DB) error {
+	query := `
+		INSERT INTO persons (name, surname, age, gender)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, name, surname, age, gender
+	`
+	createdPerson := new(models.Person)
+	row := s.QueryRow(query, person.Name, person.Surname, person.Age, person.Gender)
+	err := row.Scan(
+		&createdPerson.ID,
+		&createdPerson.Name,
+		&createdPerson.Surname,
+		&createdPerson.Age,
+		&createdPerson.Gender,
+	)
+	if err != nil {
+		return err
+	}
+	person.ID = createdPerson.ID
+	err = AddNationalitiesForUser(person, s)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func AddNationalitiesForUser(createPerson *models.Person, s *sql.DB) error {
+	var natID int
+	queryNationalities := `
+		INSERT INTO nationalities (person_id,country_id, probability)
+		VALUES ($1, $2,$3)
+		RETURNING id
+	`
+	for _, country := range createPerson.Country {
+		err := s.QueryRow(queryNationalities, createPerson.ID, country.CountryID, country.Probability).Scan(&natID)
+		if err != nil {
+			return err
+		}
+
+	}
 	return nil
 }
