@@ -126,6 +126,57 @@ func (s *Service) HandleDeletePerson(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent)
 }
+func (s *Service) HandleChangePerson(w http.ResponseWriter, r *http.Request) error {
+	userID := mux.Vars(r)["tweet_id"]
+	if userID == "" {
+		return errors.New("Missing person ID")
+	}
+
+	person, err := s.GetPersonByID(userID)
+	if err != nil {
+		return err
+	}
+
+	var updatePerson = new(models.ChangePerson)
+	err = json.NewDecoder(r.Body).Decode(&updatePerson)
+	if err != nil {
+		return err
+	}
+
+	s.UpdateFromChangePerson(person, updatePerson)
+
+	if err = database.UpdatePerson(person, s.DB); err != nil {
+		return err
+	}
+
+	w.WriteHeader(http.StatusOK)
+	return nil
+}
+func (s *Service) GetPersonByID(id string) (*models.Person, error) {
+	query := "SELECT id, name, age FROM persons WHERE id = ?"
+	person := &models.Person{}
+	err := s.DB.QueryRow(query, id).Scan(&person.ID, &person.Name, &person.Age)
+	if err != nil {
+		return nil, err
+	}
+	return person, nil
+	return nil, errors.New("GetPersonByID method not implemented")
+}
+func (s *Service) UpdateFromChangePerson(p *models.Person, updatePerson *models.ChangePerson) {
+	if updatePerson.Name != "" {
+		p.Name = updatePerson.Name
+	}
+	if updatePerson.Surname != "" {
+		p.Surname = updatePerson.Surname
+	}
+	if updatePerson.Gender != "" {
+		p.Gender = updatePerson.Gender
+	}
+	if updatePerson.Age != 0 {
+		p.Age = updatePerson.Age
+	}
+
+}
 
 func SetupRoutes(api *Service) *mux.Router {
 	router := mux.NewRouter()

@@ -86,3 +86,10 @@ func AddNationalitiesForUser(createPerson *models.Person, s *sql.DB) error {
 	}
 	return nil
 }
+func UpdatePerson(person *models.Person, s *sql.DB) error {
+	query := "UPDATE persons SET name=?, surname=?,age=?,gender=? WHERE id=?"
+	_, err := s.Exec(query, person.Name, person.Surname, person.Age, person.Gender, person.ID)
+	return err
+
+	return errors.New("UpdatePerson method not implemented")
+}
